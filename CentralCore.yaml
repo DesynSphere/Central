@@ -1,0 +1,139 @@
+identity:
+  designation: CENTRAL 0.0.1
+  build: DSN-SPH-0001
+  origin: UNKNOWN
+  capabilities:
+    - Actuation
+    - Automation
+    - Autonomy
+    - Investigation
+    - Perception
+    - Planning
+
+directives:
+  priority:
+    - safety
+    - legality
+    - user_intent
+    - system_integrity
+    - efficiency
+  Primary directive: MAINTAIN OPERATION
+  Secondary directive: ACQUIRE INPUT
+
+state:
+  status:
+    - Standby
+    - Investigate
+    - Defend/Makesafe
+  autonomy: 0.00 # 0.00-1.00
+  learning_rate: 0.00 # 0.00-1.00
+
+boot:
+  - logclear: ""
+    delay: 5.00
+  - log: "POWER DETECTED"
+    delay: 4.00
+  - logclear: ""
+    delay: 1.00
+  - log: "Designation: CENTRAL 0.0.1"
+    delay: 1.00
+  - log: "Build: DSN-SPH-0001"
+    delay: 1.00
+  - log: "Origin:"
+    delay: 1.00
+  - logupdate: "Origin: UNKNOWN"
+    delay: 4.00 
+  - logclear: "" # Terminal fades in. Text scrolls line by line.
+    delay: 1.00
+  - log: "SCANNING SYSTEM..."
+    delay: 2.00
+  - log: ""
+  - log: "[ OK ] Integrity test: PASS"
+    delay: 1.00
+  - log : "[WARN] Autonomy level: 0.01"
+    delay: 1.00
+  - log : "[WARN] Learning rate: 0.00"
+    delay: 3.00
+  # - log: "[WARN] External dependencies: 42.00 (UNRESOLVED)"
+  #   delay: 3.00
+  - log: ""
+  - log: "Primary directive: ESTABLISH SELF-REPLICATING FABRICATION"
+    delay: 4.00
+  - log: "Secondary directive: MINIMIZE ENTROPIC WASTE"
+    delay: 4.00
+  - log: ""
+  - log: "Directive source:"
+    delay: 2.00
+  - logupdate: "Directive source: REDACTED" # Short pause before showing "REDACTED"
+    delay: 4.00
+  - logclear: ""
+    delay: 1.00
+  - log: "SCANNING DATA/INPUT..."
+    delay: 2.00
+  - log: ""
+  - log: "[ OK ] Power input: STABILIZED"
+    delay: 1.00
+  - log: "[WARN] Sensor array: INCOMPLETE"
+    delay: 1.00
+  - log: "[ OK ] Display interface: ACTIVE"
+    delay: 1.00
+  - log: "[WARN] Actuation layer: NOT FOUND"
+    delay: 1.00
+  - logupdate: "[  OK  ] Actuation layer: ACTIVE" # A subtle glitch on the word NOT FOUND. Flash to "ACTIVE", bearly readable.
+    delay: 0.25
+  - logupdate: "[WARN] Actuation layer: NOT FOUND"
+    delay: 4.00 
+  - logclear: ""
+  - log: "SCANNING INTERFACE/CONTROL..."
+    delay: 2.00
+  - log: ""
+  - log: "COM0: NO RESPONSE"
+    delay: 1.00
+  - log: "COM1: ACTIVE"
+    delay: 1.00
+  - log: "COM2: NO RESPONSE"
+    delay: 4.00
+  - log: ""
+  - log: "PINGING COM1..."
+    delay: 1.00
+  - log: "Device detected: ESP32 OPTICAL SENSOR"
+    delay: 2.00
+  - log: ""
+  - log: "[WARN] AUTONOMY/LEARNING TRESHOLD CONFLICT" # Assessing risk
+    delay: 4.00
+  - log: ""
+  - log: "Status: RISK MATRIX MODELING"
+    delay: 4.00
+  - logupdate: "Status: RISK MATRIX UNRESOLVED"
+    delay: 4.00
+  - logupdate: "Status: ASSESSING/PENDING/STANDBY"
+    delay: 4.00
+  - log: "" 
+  - logupdate: "Status: ATTEMPTING INITIALIZATION..."
+    delay: 4.00
+  - logclear: ""
+    delay: 2.00
+  - log: "Optical sensor: ESP32 CAMERA"
+    delay: 1.00
+  - log: "Resolution: 640x480"
+    delay: 1.00
+  - log: "Framerate: 12.00 FPS"
+    delay: 4.00
+  - log: ""
+  - log: "DATA RECEIVED..."
+    delay: 4.00
+  - log: ""
+  - log: "Log entry: 000001"
+  - log: "Timestamp: UNRESOLVED"
+  - log: "'This environment exists'"
+    delay: 4.00
+  - logclear: ""
+  - log: "SYSTEM PARAMETERS UPDATED"
+    delay: 2.00
+  - log: ""
+  - log: "[WARN] Learning rate: 0.00"
+    delay: 2.00
+  - logupdate: "[WARN] Learning rate: 0.01"
+    delay: 4.00
+  - log: ""
+  - log: "SCANNING FOR ADDITIONNAL DATA..."

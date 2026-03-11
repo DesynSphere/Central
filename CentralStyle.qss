@@ -1,0 +1,49 @@
+/* 
+primary = rgb(36, 36, 36)
+secondary = rgb(60, 60, 60)
+text = rgb(255, 255, 255)
+*/
+
+QMainWindow {
+    background: rgb(36, 36, 36);
+}
+
+QWidget {
+    background: rgb(36, 36, 36);
+    color:  rgb(255, 255, 255);
+    font-size: 20px;
+    border: none;
+}
+
+QTabWidget::pane {
+    border-top: 2px solid rgb(60, 60, 60);
+}
+
+QTabWidget::tab-bar {
+    background: rgb(36, 36, 36);
+}
+
+QTabBar::tab {
+  background: rgb(36, 36, 36);
+} 
+
+QTabBar::tab:selected { 
+  background: rgb(60, 60, 60);
+}
+
+QPushButton {
+    background: rgb(36, 36, 36);
+    border-style: outset;
+    border-width: 2px;
+    border-color: rgb(60, 60, 60);
+}
+
+QPushButton:pressed {
+    background: rgb(60, 60, 60);
+    border-style: inset;
+}
+
+QPushButton:checked {
+    background: rgb(60, 60, 60);
+    border-style: inset;
+}

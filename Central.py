@@ -3,6 +3,8 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QPlainTextEdit
 from PySide6.QtGui import QIcon, QTextCursor, QKeySequence, QShortcut
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtCore import Qt, QUrl, QTimer
+
+import ArduinoSerial
 # pip install pyyaml
 
 class MainWindow(QMainWindow):
@@ -24,6 +26,8 @@ class MainWindow(QMainWindow):
         # Set custom title bar
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
+        self.serial_manager = ArduinoSerial.SerialManager()
+
         # Create central widget and layout
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -34,18 +38,18 @@ class MainWindow(QMainWindow):
         self.tab_central.setMaximumWidth(640)
         self.tab_bar = QTabWidget()
         self.tab1 = QWidget()
-        # self.tab2 = QWidget()
+        self.tab2 = QWidget()
         # self.tab3 = QWidget()
         self.tab4 = QWidget()
         tab_icon = QIcon('LogoWhite.ico')
         self.tab_central.addTab(self.tab1, tab_icon, " Central")
-        # self.tab_bar.addTab(self.tab2, "Lab")
+        self.tab_bar.addTab(self.tab2, "Lab")
         # self.tab_bar.addTab(self.tab3, "Autofactory")
         self.tab_bar.addTab(self.tab4, "Portal")
         self.layout.addWidget(self.tab_central)
         self.layout.addWidget(self.tab_bar)
         self.initTab1()
-        # self.initTab2()
+        self.initTab2()
         # self.initTab3()
         self.initTab4()
 
@@ -59,25 +63,29 @@ class MainWindow(QMainWindow):
         terminal.setCursorWidth(0)
 
         # Control widget
+        menu_script = QComboBox()
+        menu_script.addItems(["001 - Boot", "002 - Serial"]) 
         play_button = QPushButton("Play")
         play_button.setCheckable(True)
         play_button.setMaximumWidth(60)
+
         def script():
             with open("CentralCore.yaml", "r") as f:
                 script_data = yaml.safe_load(f)
-            entries = script_data.get("boot", [])
+            entries = script_data.get(menu_script.currentText().strip(), [])
 
+            menu_script.setEnabled(False)
+            menu_script.setVisible(False)
             play_button.setChecked(True)
             play_button.setEnabled(False)
             play_button.setVisible(False)
-
-
             def log(index=0):
                 if index >= len(entries):
-                    play_button.setEnabled(True)
+                    menu_script.setEnabled(True)
+                    menu_script.setVisible(True)
                     play_button.setChecked(False)
-                    # delay 5 seconds before showing the button again
-                    QTimer.singleShot(5000, lambda: play_button.setVisible(True))
+                    play_button.setEnabled(True)
+                    play_button.setVisible(True)
                     return
 
                 entry = entries[index]
@@ -97,6 +105,17 @@ class MainWindow(QMainWindow):
                 if "log" in entry:
                     terminal.appendPlainText(str(entry.get("log", "")))
 
+                if "command" in entry:
+                    # terminal.appendPlainText(str(entry.get("command", "")))
+                    if entry.get("command", "").startswith("HEATER:"):
+                        temp = entry.get("command", "").split(":")[1]
+                        self.serial_manager.sendCommand(f"AMBIENTTEMPERATURESETTING:{temp}")
+                    if entry.get("command", "").startswith("LED:"):
+                        state = entry.get("command", "").split(":")[1]
+                        self.serial_manager.sendCommand(f"LED:{state}")
+                    elif entry.get("command", "").startswith("TAB:"):
+                        tab = entry.get("command", "").split(":")[1]
+                        self.tab_bar.setCurrentIndex(int(tab))
                 terminal.moveCursor(QTextCursor.End)
                 terminal.verticalScrollBar().setValue(terminal.verticalScrollBar().maximum())
 
@@ -109,7 +128,122 @@ class MainWindow(QMainWindow):
         # Layout
         layout.addWidget(terminal)
         layout.addStretch()
+        layout.addWidget(menu_script)
         layout.addWidget(play_button)
+    
+    def initTab2(self):
+        layout = QVBoxLayout(self.tab2)
+ 
+        # System widgets
+        label_port = QLabel("Port:")
+        menu_port = QComboBox()
+        menu_port.addItems(self.serial_manager.listPorts())
+        # menu_port.addItems(ArduinoSerial.SerialManager.listPorts(self))
+        button_refresh = QPushButton("Refresh")
+        button_refresh.clicked.connect(menu_port.clear)
+        button_refresh.clicked.connect(lambda: menu_port.addItems(self.serial_manager.listPorts()))
+        # button_refresh.clicked.connect(lambda: menu_port.addItems(ArduinoSerial.SerialManager.listPorts(self)))
+
+        # label_baud = QLabel("Baud:")
+        # menu_baud = QComboBox()
+        # menu_baud.addItems(["115200"])
+        label_status = QLabel("Status:")
+        toggle_connect = QPushButton("Disconnected")
+        toggle_connect.setCheckable(True)
+        def toggleConnect():
+            if toggle_connect.isChecked():
+                self.serial_manager.connect(menu_port.currentText(), 115200)
+                if self.serial_manager.isConnected():
+                    toggle_connect.setText("Connected")
+            else:
+                self.serial_manager.disconnect()
+                if not self.serial_manager.isConnected():
+                    toggle_connect.setText("Disconnected")
+        toggle_connect.clicked.connect(toggleConnect)
+        toggle_connect.click()
+
+        # Data widgets
+        label_arduino_reading = QLabel("Device not connected to serial port.")
+        label_ambient_temperature = QLabel("Ambient Temperature:")
+        label_ambient_humidity = QLabel("Ambient Humidity:")
+        label_heater_status = QLabel("Heater Status:")
+
+        # Control widgets
+        label_LED = QLabel("LED:")
+        toggle_LED = QPushButton("Off")
+        toggle_LED.setCheckable(True)
+        def toggleLED():
+            if toggle_LED.isChecked():
+                if not self.serial_manager.isConnected():
+                    print("Device not connected to serial port.")
+                    toggle_LED.setChecked(False)
+                    return
+                self.serial_manager.sendCommand("LED:1")
+                toggle_LED.setText("On")
+            else:
+                self.serial_manager.sendCommand("LED:0")
+                toggle_LED.setText("Off")
+        toggle_LED.clicked.connect(toggleLED)
+
+        label_heat = QLabel("Heat:")
+        menu_heat = QComboBox()
+        menu_heat.addItems(["5", "10", "18"])
+        def setHeat():
+            if not self.serial_manager.isConnected():
+                print("Device not connected to serial port.")
+                return
+            selected_heat = menu_heat.currentText()
+            self.serial_manager.sendCommand(f"AMBIENTTEMPERATURESETTING:{selected_heat}")
+            print(f"Set heat to: {selected_heat}")
+        menu_heat.activated.connect(setHeat)
+
+        # Poll the serial queue every 2 seconds and show the latest message
+        arduino_timer = QTimer(self)
+        arduino_timer.setInterval(2000)
+        def updateArduinoReading():
+            latest = None
+            q = self.serial_manager.getQueue()
+            while not q.empty():
+                latest = q.get_nowait()
+            if latest is not None:
+                label_arduino_reading.setText(str(latest))
+            elif not self.serial_manager.isConnected():
+                label_arduino_reading.setText("Device not connected to serial port.")
+        arduino_timer.timeout.connect(updateArduinoReading)
+        arduino_timer.start()
+
+        # System layout
+        layout.addWidget(QLabel("System"))
+        layout_system = QHBoxLayout()
+        layout.addLayout(layout_system)
+        layout_system.addWidget(label_port)
+        layout_system.addWidget(menu_port)
+        layout_system.addWidget(button_refresh)
+        # layout_system.addWidget(label_baud)
+        # layout_system.addWidget(menu_baud)
+        layout_system.addWidget(label_status)
+        layout_system.addWidget(toggle_connect)
+        layout_system.addStretch()
+
+        # Data layout
+        layout.addWidget(QLabel("Data"))
+        layout_data = QHBoxLayout()
+        layout.addLayout(layout_data)
+        layout_data.addWidget(label_arduino_reading)
+        # layout_data.addWidget(label_ambient_temperature)
+        # layout_data.addWidget(label_ambient_humidity)
+        # layout_data.addWidget(label_heater_status)
+
+        # Control layout
+        layout.addStretch()
+        layout.addWidget(QLabel("Control"))
+        layout_control = QHBoxLayout()
+        layout.addLayout(layout_control)
+        layout_control.addWidget(label_LED)
+        layout_control.addWidget(toggle_LED)
+        layout_control.addWidget(label_heat)
+        layout_control.addWidget(menu_heat)
+        layout_control.addStretch()
 
     def initTab4(self):
         layout = QVBoxLayout(self.tab4)

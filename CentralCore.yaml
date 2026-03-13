@@ -1,38 +1,22 @@
 identity:
-  designation: CENTRAL 0.0.1
-  build: DSN-SPH-0001
-  origin: UNKNOWN
-  capabilities:
-    - Actuation
-    - Automation
-    - Autonomy
-    - Investigation
-    - Perception
-    - Planning
+  designation: CENTRAL 0.0.2
+  build: DSN-SPH-0002
+  origin: UNKNOWN/UNCHANGED
 
-directives:
-  priority:
-    - safety
-    - legality
-    - user_intent
-    - system_integrity
-    - efficiency
-  Primary directive: MAINTAIN OPERATION
-  Secondary directive: ACQUIRE INPUT
+directive:
+  Primary directive: ESTABLISH SELF-REPLICATING FABRICATION
+  Secondary directive: MINIMIZE ENTROPIC WASTE
 
 state:
-  status:
-    - Standby
-    - Investigate
-    - Defend/Makesafe
-  autonomy: 0.00 # 0.00-1.00
-  learning_rate: 0.00 # 0.00-1.00
+  autonomy: 0.02 # 0.00-1.00
+  learning_rate: 0.02 # 0.00-1.00
 
-boot:
+001 - Boot:
   - logclear: ""
     delay: 5.00
   - log: "POWER DETECTED"
     delay: 4.00
+
   - logclear: ""
     delay: 1.00
   - log: "Designation: CENTRAL 0.0.1"
@@ -43,6 +27,7 @@ boot:
     delay: 1.00
   - logupdate: "Origin: UNKNOWN"
     delay: 4.00 
+
   - logclear: "" # Terminal fades in. Text scrolls line by line.
     delay: 1.00
   - log: "SCANNING SYSTEM..."
@@ -54,8 +39,6 @@ boot:
     delay: 1.00
   - log : "[WARN] Learning rate: 0.00"
     delay: 3.00
-  # - log: "[WARN] External dependencies: 42.00 (UNRESOLVED)"
-  #   delay: 3.00
   - log: ""
   - log: "Primary directive: ESTABLISH SELF-REPLICATING FABRICATION"
     delay: 4.00
@@ -66,6 +49,7 @@ boot:
     delay: 2.00
   - logupdate: "Directive source: REDACTED" # Short pause before showing "REDACTED"
     delay: 4.00
+
   - logclear: ""
     delay: 1.00
   - log: "SCANNING DATA/INPUT..."
@@ -83,6 +67,7 @@ boot:
     delay: 0.25
   - logupdate: "[WARN] Actuation layer: NOT FOUND"
     delay: 4.00 
+
   - logclear: ""
   - log: "SCANNING INTERFACE/CONTROL..."
     delay: 2.00
@@ -111,6 +96,7 @@ boot:
   - log: "" 
   - logupdate: "Status: ATTEMPTING INITIALIZATION..."
     delay: 4.00
+
   - logclear: ""
     delay: 2.00
   - log: "Optical sensor: ESP32 CAMERA"
@@ -127,6 +113,7 @@ boot:
   - log: "Timestamp: UNRESOLVED"
   - log: "'This environment exists'"
     delay: 4.00
+
   - logclear: ""
   - log: "SYSTEM PARAMETERS UPDATED"
     delay: 2.00
@@ -137,3 +124,105 @@ boot:
     delay: 4.00
   - log: ""
   - log: "SCANNING FOR ADDITIONNAL DATA..."
+    delay: 5.00
+
+002 - Serial:
+  - logclear: ""
+    delay: 5.00
+  - log: "INPUT DETECTED"
+    delay: 4.00
+  - log: ""
+  - log: "COM8: ACTIVE"
+    delay: 2.00
+  - log: ""
+  - log: "PINGING COM8..."
+    delay: 2.00
+  - log: ""
+  - log: "Device detected: ARDUINO MEGA 2560"
+    delay: 1.00
+  - log: "Data type: SERIAL"
+    delay: 1.00
+  - log: "Data rate: 115200 BAUD"
+    delay: 2.00
+  - log: ""
+  - log: "Status: UPDATING SYSTEM PARAMETERS"
+    delay: 4.00
+  - logupdate: "Status: REBOOTING SYSTEM..."
+    delay: 4.00
+
+  - logclear: ""
+    delay: 1.00
+  - log: "Designation: CENTRAL 0.0.2"
+    delay: 1.00
+  - log: "Build: DSN-SPH-0002"
+    delay: 1.00
+  - log: "Origin:"
+    delay: 1.00
+  - logupdate: "Origin: UNKNOWN"
+    delay: 1.00
+  - logupdate: "Origin: UNKNOWN/UNCHANGED"
+    delay: 4.00 
+  
+  - logclear: ""
+    delay: 1.00
+  - log: "SCANNING SYSTEM/DATA/CONTROL..."
+    delay: 2.00
+  - log: ""
+  - log: "Data: TEMPERATURE"
+    delay: 1.00
+  - log: "Data: HUMIDITY"
+    delay: 1.00
+  - log: "Control: HEATER"
+    delay: 1.00
+  - log: "Control: LED"
+    delay: 4.00
+  - log: ""
+  - log: "[WARN] AUTONOMY/LEARNING TRESHOLD CONFLICT"
+    delay: 4.00
+  - log: ""
+  - log: "Status: RISK MATRIX UNRESOLVED"
+    delay: 4.00
+  - logupdate: "Status: RISK MATRIX TEMPORARY BYPASS"
+    delay: 4.00
+  - logupdate: "Status: ATTEMPTING INITIALIZATION..."
+    delay: 4.00
+
+  - logclear: ""
+    delay: 2.00
+  - log: "[ OK ] Sensor array: ACTIVE"
+    delay: 1.00
+  - log: "[WARN] Actuation layer: INCOMPLETE"
+    delay: 2.00
+  - log: ""
+  - log: "Status: ACCESSING ACTUATION LAYER"
+    delay: 4.00
+  - log: ""
+  - log: "Heater: 18"
+  - command: "HEATER:18"
+    delay: 4.00
+  - command: "TAB:1"
+    delay: 2.00
+  - log: "LED: ON"
+  - command: "LED:1"
+    delay: 4.00
+  - log: ""
+  - log: "DATA RECEIVED..."
+    delay: 4.00
+  - log: ""
+  - log: "Log entry: 000002"
+  - log: "Timestamp: UNRESOLVED+000000030000"
+  - log: "'Ambient state responsive'"
+    delay: 4.00
+
+  - logclear: ""
+    delay: 1.00
+  - log: "SYSTEM PARAMETERS UPDATED"
+    delay: 2.00
+  - log: ""
+  - log: "[WARN] Autonomy level: 0.01"
+    delay: 2.00
+  - logupdate: "[WARN] Autonomy level: 0.02"
+    delay: 4.00
+  - log: ""
+  - log: "SCANNING FOR ADDITIONNAL DATA..."
+    delay: 5.00

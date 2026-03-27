@@ -12,19 +12,132 @@
 #include "board_config.h" // Select camera model in board_config.h
 
 // Wifi config
-const char *ssid = "WIFI"; // Replace "WIFI"
+const char *ssid = "Wifi"; // Replace "WIFI"
 const char *password = "Passw0rd"; // Replace "Passw0rd"
 uint32_t last_ota_time = 0;
+
+// Motor controller pinout
+// GPIO0, GPIO2, and GPIO12 are ESP32 strapping pins and must stay in a safe state during boot.
+constexpr uint8_t MOTOR_ENA_PIN = 32;
+constexpr uint8_t MOTOR_IN1_PIN = 33;
+constexpr uint8_t MOTOR_IN2_PIN = 14;
+constexpr uint8_t MOTOR_IN3_PIN = 12;
+constexpr uint8_t MOTOR_IN4_PIN = 0;
+constexpr uint8_t MOTOR_ENB_PIN = 2;
+
+String serial_command_buffer;
 
 // Camera function
 void startCameraServer();
 void setupLedFlash();
+void configureMotorPins();
+void handleSerialCommands();
+bool handleMotorCommand(const char *command);
+void driveStop();
+void driveForward();
+void driveBackward();
+void turnLeft();
+void turnRight();
+
+void setMotorOutputs(bool enable_a, bool in1, bool in2, bool enable_b, bool in3, bool in4) {
+  digitalWrite(MOTOR_ENA_PIN, enable_a ? HIGH : LOW);
+  digitalWrite(MOTOR_IN1_PIN, in1 ? HIGH : LOW);
+  digitalWrite(MOTOR_IN2_PIN, in2 ? HIGH : LOW);
+  digitalWrite(MOTOR_ENB_PIN, enable_b ? HIGH : LOW);
+  digitalWrite(MOTOR_IN3_PIN, in3 ? HIGH : LOW);
+  digitalWrite(MOTOR_IN4_PIN, in4 ? HIGH : LOW);
+}
+
+void configureMotorPins() {
+  pinMode(MOTOR_ENA_PIN, OUTPUT);
+  pinMode(MOTOR_IN1_PIN, OUTPUT);
+  pinMode(MOTOR_IN2_PIN, OUTPUT);
+  pinMode(MOTOR_IN3_PIN, OUTPUT);
+  pinMode(MOTOR_IN4_PIN, OUTPUT);
+  pinMode(MOTOR_ENB_PIN, OUTPUT);
+  driveStop();
+}
+
+void driveStop() {
+  setMotorOutputs(false, false, false, false, false, false);
+}
+
+// Adjust these direction states if either motor is wired in reverse.
+void driveForward() {
+  setMotorOutputs(true, false, true, true, true, false);
+}
+
+void driveBackward() {
+  setMotorOutputs(true, true, false, true, false, true);
+}
+
+void turnLeft() {
+  setMotorOutputs(true, true, false, true, true, false);
+}
+
+void turnRight() {
+  setMotorOutputs(true, false, true, true, false, true);
+}
+
+bool handleMotorCommand(const char *command) {
+  String normalized = command == nullptr ? "" : String(command);
+  normalized.trim();
+  if (normalized.length() == 0) {
+    return false;
+  }
+
+  normalized.toUpperCase();
+  if (normalized.startsWith("MOTOR:")) {
+    normalized.remove(0, 6);
+  }
+
+  if (normalized == "STOP") {
+    driveStop();
+  } else if (normalized == "FORWARD") {
+    driveForward();
+  } else if (normalized == "BACKWARD") {
+    driveBackward();
+  } else if (normalized == "LEFT") {
+    turnLeft();
+  } else if (normalized == "RIGHT") {
+    turnRight();
+  } else {
+    Serial.print("UNKNOWN MOTOR COMMAND:");
+    Serial.println(normalized);
+    return false;
+  }
+
+  Serial.print("MOTOR:");
+  Serial.println(normalized);
+  return true;
+}
+
+void handleSerialCommands() {
+  while (Serial.available() > 0) {
+    char incoming = static_cast<char>(Serial.read());
+    if (incoming == '\n' || incoming == '\r') {
+      if (serial_command_buffer.length() > 0) {
+        handleMotorCommand(serial_command_buffer.c_str());
+        serial_command_buffer = "";
+      }
+      continue;
+    }
+
+    serial_command_buffer += incoming;
+    if (serial_command_buffer.length() > 64) {
+      serial_command_buffer = "";
+      Serial.println("COMMAND TOO LONG");
+    }
+  }
+}
 
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println("Booting");
   Serial.println();
+
+  configureMotorPins();
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -184,5 +297,6 @@ void setup() {
 }
 
 void loop() {
+  handleSerialCommands();
   ArduinoOTA.handle();
 }

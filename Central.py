@@ -2,7 +2,8 @@ import sys, yaml
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QPlainTextEdit, QTabWidget, QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox
 from PySide6.QtGui import QIcon, QTextCursor, QKeySequence, QShortcut
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtCore import Qt, QUrl, QTimer
+from PySide6.QtCore import Qt, QTimer, QUrl, QUrlQuery
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 
 import ArduinoSerial
 # pip install pyyaml
@@ -27,6 +28,8 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         self.serial_manager = ArduinoSerial.SerialManager()
+        self.portal_network_manager = QNetworkAccessManager(self)
+        self.portal_pending_replies = set()
 
         # Create central widget and layout
         self.central_widget = QWidget()
@@ -64,7 +67,7 @@ class MainWindow(QMainWindow):
 
         # Control widget
         menu_script = QComboBox()
-        menu_script.addItems(["001 - Boot", "002 - Serial"]) 
+        menu_script.addItems(["001 - Boot", "002 - Serial", "003 - Actuation"]) 
         play_button = QPushButton("Play")
         play_button.setCheckable(True)
         play_button.setMaximumWidth(60)
@@ -266,16 +269,76 @@ class MainWindow(QMainWindow):
 
         # Data widgets
         web_view = QWebEngineView()
-        initial_url = QUrl(f"http://{menu_port.currentText().strip()}/")
-        stream_url = QUrl(f"http://{menu_port.currentText().strip()}:81/stream")
-        web_view.load(stream_url)
+
+        def portalHost():
+            return menu_port.currentText().strip()
+
         def load_stream_url():
-            # stream = QUrl(f"http://{menu_port.currentText().strip()}:81/stream")
-            web_view.load(stream_url)
+            host = portalHost()
+            if host:
+                web_view.load(QUrl(f"http://{host}:81/stream"))
+
+        load_stream_url()
         menu_port.currentTextChanged.connect(lambda _: load_stream_url())
 
         # Control widgets
+        button_stop = QPushButton("■")
+        button_forward = QPushButton("▲")
+        button_backward = QPushButton("▼")
+        button_left = QPushButton("◄")
+        button_right = QPushButton("►")
+        controlFixedWidth = 40
+        button_backward.setFixedWidth(controlFixedWidth)
+        button_left.setFixedWidth(controlFixedWidth)
+        button_forward.setFixedWidth(controlFixedWidth)
+        button_stop.setFixedWidth(controlFixedWidth)
+        button_right.setFixedWidth(controlFixedWidth)
 
+        def sendMotorCommand(command):
+            host = portalHost()
+            if not host:
+                print("Portal IP not set.")
+                return
+
+            url = QUrl(f"http://{host}/motor")
+            query = QUrlQuery()
+            query.addQueryItem("cmd", command)
+            url.setQuery(query)
+
+            reply = self.portal_network_manager.get(QNetworkRequest(url))
+            self.portal_pending_replies.add(reply)
+
+            def onFinished():
+                response = bytes(reply.readAll()).decode(errors="replace").strip()
+                if reply.error():
+                    print(f"Motor command failed ({command}): {reply.errorString()}")
+                elif response:
+                    print(response)
+                self.portal_pending_replies.discard(reply)
+                reply.deleteLater()
+
+            reply.finished.connect(onFinished)
+
+        button_stop.clicked.connect(lambda: sendMotorCommand("STOP"))
+        button_forward.clicked.connect(lambda: sendMotorCommand("FORWARD"))
+        button_backward.clicked.connect(lambda: sendMotorCommand("BACKWARD"))
+        button_left.clicked.connect(lambda: sendMotorCommand("LEFT"))
+        button_right.clicked.connect(lambda: sendMotorCommand("RIGHT"))
+
+        self.key_mapping = {
+            Qt.Key_Q: button_stop,
+            Qt.Key_W: button_forward,
+            Qt.Key_S: button_backward,
+            Qt.Key_A: button_left,
+            Qt.Key_D: button_right,
+        }
+
+        # Keep button visuals in sync with actual key hold state.
+        for key, button in self.key_mapping.items():
+            shortcut = QShortcut(QKeySequence(key), self)
+            shortcut.setContext(Qt.WindowShortcut)
+            # Keep key behavior in keyPressEvent/keyReleaseEvent only.
+            shortcut.activated.connect(button.animateClick)
 
         # System layout
         layout.addWidget(QLabel("System"))
@@ -295,7 +358,32 @@ class MainWindow(QMainWindow):
         # Control layout
         layout.addStretch()
         layout.addWidget(QLabel("Control"))
-        layout.addWidget(QLabel("Actuation layer: NOT FOUND"))
+        layout_control = QGridLayout()
+        layout.addLayout(layout_control)
+        layout_control.addWidget(button_stop, 0, 0)
+        layout_control.addWidget(button_forward, 0, 1)
+        layout_control.addWidget(button_backward, 1, 1)
+        layout_control.addWidget(button_left, 1, 0)
+        layout_control.addWidget(button_right, 1, 2)
+        layout_control.setColumnStretch(3, 1)
+
+    def keyPressEvent(self, event):
+        if event.isAutoRepeat():
+            return
+        if event.key() in self.key_mapping:
+            button = self.key_mapping[event.key()]
+            button.setDown(True)
+            button.setChecked(True)
+        super().keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        if event.isAutoRepeat():
+            return
+        if event.key() in self.key_mapping:
+            button = self.key_mapping[event.key()]
+            button.setDown(False)
+            button.setChecked(False)
+        super().keyReleaseEvent(event)
 
 # Fix/workaround for Windows taskbar icon
 import ctypes

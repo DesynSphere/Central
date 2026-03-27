@@ -21,6 +21,8 @@
 #include "camera_index.h"
 #include "board_config.h"
 
+bool handleMotorCommand(const char *command);
+
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
 #endif
@@ -410,6 +412,31 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   return httpd_resp_send(req, NULL, 0);
 }
 
+static esp_err_t motor_handler(httpd_req_t *req) {
+  char *buf = NULL;
+  char command[32];
+
+  if (parse_get(req, &buf) != ESP_OK) {
+    return ESP_FAIL;
+  }
+  if (httpd_query_key_value(buf, "cmd", command, sizeof(command)) != ESP_OK) {
+    free(buf);
+    httpd_resp_send_404(req);
+    return ESP_FAIL;
+  }
+  free(buf);
+
+  httpd_resp_set_type(req, "text/plain");
+  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+
+  if (!handleMotorCommand(command)) {
+    httpd_resp_set_status(req, "400 Bad Request");
+    return httpd_resp_send(req, "Invalid motor command", HTTPD_RESP_USE_STRLEN);
+  }
+
+  return httpd_resp_send(req, "OK", HTTPD_RESP_USE_STRLEN);
+}
+
 static int print_reg(char *p, sensor_t *s, uint16_t reg, uint32_t mask) {
   return sprintf(p, "\"0x%x\":%u,", reg, s->get_reg(s, reg, mask));
 }
@@ -710,6 +737,19 @@ void startCameraServer() {
 #endif
   };
 
+  httpd_uri_t motor_uri = {
+    .uri = "/motor",
+    .method = HTTP_GET,
+    .handler = motor_handler,
+    .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+    ,
+    .is_websocket = true,
+    .handle_ws_control_frames = false,
+    .supported_subprotocol = NULL
+#endif
+  };
+
   httpd_uri_t capture_uri = {
     .uri = "/capture",
     .method = HTTP_GET,
@@ -820,6 +860,7 @@ void startCameraServer() {
   if (httpd_start(&camera_httpd, &config) == ESP_OK) {
     httpd_register_uri_handler(camera_httpd, &index_uri);
     httpd_register_uri_handler(camera_httpd, &cmd_uri);
+    httpd_register_uri_handler(camera_httpd, &motor_uri);
     httpd_register_uri_handler(camera_httpd, &status_uri);
     httpd_register_uri_handler(camera_httpd, &capture_uri);
     httpd_register_uri_handler(camera_httpd, &bmp_uri);

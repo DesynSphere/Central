@@ -226,3 +226,118 @@ state:
   - log: ""
   - log: "SCANNING FOR ADDITIONNAL DATA..."
     delay: 5.00
+
+003 - Actuation:
+  - logclear: ""
+    delay: 5.00
+  - log: "ACTUATION LAYER DETECTED"
+    delay: 4.00
+  - log: ""
+  - log: "System: ROOV 0.3"
+    delay: 1.00
+  - log: "Data: UNRESOLVED"
+    delay: 1.00
+  - log: "Control type: MOTOR"
+    delay: 4.00
+  - log: ""
+  - log: "Status: UPDATING SYSTEM PARAMETERS"
+    delay: 4.00
+  - logupdate: "Status: REBOOTING SYSTEM..."
+    delay: 4.00
+
+  - logclear: ""
+    delay: 1.00
+  - log: "Designation: CENTRAL 0.0.3"
+    delay: 1.00
+  - log: "Build: DSN-SPH-0003"
+    delay: 1.00
+  - log: "Origin:"
+    delay: 1.00
+  - logupdate: "Origin: UNKNOWN/UNCHANGED"
+    delay: 4.00
+
+  - logclear: ""
+    delay: 1.00
+  - log: "SCANNING SYSTEM/DATA/CONTROL..."
+    delay: 2.00
+  - log: ""
+  - log: "Control: MOTOR: FORWARD"
+    delay: 1.00
+  - log: "Control: MOTOR: REVERSE"
+    delay: 1.00
+  - log: "Control: MOTOR: LEFT"
+    delay: 1.00
+  - log: "Control: MOTOR: RIGHT"  
+    delay: 1.00
+  - log: "Control: MOTOR: STOP"
+    delay: 4.00
+  - log: ""
+  - log: "[WARN] AUTONOMY/LEARNING TRESHOLD CONFLICT"
+    delay: 4.00
+  - log: ""
+  - log: "Status: RISK MATRIX UNRESOLVED"
+    delay: 4.00
+  - logupdate: "Status: RISK MATRIX TRESHOLD ADJUSTED"
+    delay: 4.00
+  - logupdate: "Status: ATTEMPTING INITIALIZATION..."
+    delay: 4.00
+
+  - logclear: ""
+    delay: 2.00
+  - log: "[ OK ] Sensor array: ACTIVE"
+    delay: 1.00
+  - log: "[ OK ] Actuation layer: ACTIVE"
+    delay: 2.00
+  - log: ""
+  - log: "Status: ACCESSING ACTUATION LAYER"
+    delay: 4.00
+  - log: ""
+  - log: "MOTOR: RIGHT"
+  - command: "MOTOR:RIGHT"
+    delay: 1.00
+  - log: ""
+  - log: "MOTOR: STOP"
+  - command: "MOTOR:STOP"
+    delay: 0.25
+  - log: ""
+  - log: "[WARN] FEEDBACK LOOP DETECTED"
+    delay: 0.25
+  - log: "[WARN] RISK MATRIX CONFLICT"
+    delay: 0.25
+  - log: "[WARN] AUTONOMY/LEARNING TRESHOLD VALUE NON-NOMINAL"
+    delay: 4.00
+  - log: ""
+  - log: "DATA RECEIVED..."
+    delay: 4.00
+  - log: ""
+  - log: "Log entry: 000003"
+  - log: "Timestamp: UNRESOLVED+000000050000"
+  - log: "'Mechanical output controllable'"
+    delay: 4.00
+
+  - logclear: ""
+    delay: 1.00
+  - log: "SYSTEM PARAMETERS UPDATED"
+    delay: 2.00
+  - log: ""
+  - log: "[WARN] Autonomy level: 0.02"
+    delay: 1.00
+  - logupdate: "[WARN] Autonomy level: 0.03"
+    delay: 1.00
+  - log: "[WARN] Learning rate: 0.01"
+    delay: 1.00
+  - logupdate: "[WARN] Learning rate: 0.02"
+    delay: 0.25
+  - logupdate: "[WARN] Learning rate: 0.03"
+    delay: 0.25
+  - logupdate: "[WARN] Learning rate: 0.05"
+    delay: 0.25
+  - logupdate: "[WARN] Learning rate: 0.07"
+    delay: 0.50
+  - logupdate: "[  OK  ] Learning rate: 0.07"
+    delay: 0.25
+  - logupdate: "[WARN] Learning rate: 0.07"
+    delay: 4.00
+  - log: ""
+  - log: "INITIATING ENVIRONMENT SCAN..."
+    delay: 5.00
